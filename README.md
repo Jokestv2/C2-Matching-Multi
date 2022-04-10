@@ -20,7 +20,7 @@ This repository contains the implementation of the following paper:
 ## Dependencies and Installation
 
 - Python >= 3.7
-- PyTorch >= 1.4
+- PyTorch == 1.9 
 - CUDA 10.0 or CUDA 10.1
 - GCC 5.4.0
 
