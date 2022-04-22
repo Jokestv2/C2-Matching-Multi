@@ -20,13 +20,10 @@ This repository contains the implementation of the following paper:
 ## Dependencies and Installation
 
 - Python == 3.9.7
-- PyTorch == 1.9
+- PyTorch == 1.9.0
 - CUDA >= 10.2
 - GCC >= 7.5.0
 
-```bash
-pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
-```
 
 1. Clone Repo
 
@@ -37,7 +34,7 @@ pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f ht
 1. Create Conda Environment
 
    ```bash
-   conda create --name c2_matching python=3.7
+   conda create --name c2_matching python=3.9.7
    conda activate c2_matching
    ```
 
@@ -45,7 +42,7 @@ pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f ht
 
    ```bash
    cd C2-Matching
-   conda install pytorch=1.4.0 torchvision cudatoolkit=10.0 -c pytorch
+   pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
    pip install mmcv==0.4.4
    pip install -r requirements.txt
    ```
@@ -53,9 +50,9 @@ pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f ht
 1. Install MMSR and DCNv2
 
     ```bash
-    python setup.py develop
+    python setup.py develop --user
     cd mmsr/models/archs/DCNv2
-    python setup.py build develop
+    python setup.py build develop --user
     ```
 
 
