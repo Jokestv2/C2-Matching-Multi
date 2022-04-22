@@ -1,7 +1,7 @@
 # C2-Matching (CVPR2021)
 
-![Python 3.7](https://img.shields.io/badge/python-3.7-green.svg?style=plastic)
-![pytorch](https://pytorch.org/)
+![Python 3.7](https://img.shields.io/badge/python-3.9.7-green.svg?style=plastic)
+![pytorch](https://img.shields.io/badge/pytorch-1.9.0-green.svg?style=plastic)
 
 This repository contains the implementation of the following paper:
 > **Robust Reference-based Super-Resolution via C2-Matching**<br>
@@ -20,9 +20,13 @@ This repository contains the implementation of the following paper:
 ## Dependencies and Installation
 
 - Python >= 3.7
-- PyTorch >= 1.4 
+- PyTorch >= 1.9
 - CUDA >= 10.2
 - GCC >= 5.4.0
+
+'''
+pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
+'''
 
 1. Clone Repo
 
