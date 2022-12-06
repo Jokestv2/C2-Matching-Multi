@@ -255,7 +255,10 @@ def dst_aware_fuse_y_v3(img_sr_fetcher, img_gt_fetcher, opts, beta, beta2):
     for ((idx, img_gt), (_, img_sr_list)) in zip(img_gt_fetcher, img_sr_fetcher):
         num_input += 1
         # crop ground truth image to the same dimension as RefSR results
+        #  img_sr should be already cropped in case of C2-Matching, we crop here to accomodate other models' outputs
         img_gt = mod_crop(img_gt, scale=scale)
+        for (i, img_sr) in enumerate(img_sr_list):
+            img_sr_list[i] = mod_crop(img_sr, scale=scale)
         gt_h, gt_w, _ = img_gt.shape
         lq_h, lq_w = gt_h // scale, gt_w // scale
         img_gt_lq = resize_bgr_img_bicubic(img_gt, lq_h, lq_w)
@@ -271,6 +274,7 @@ def dst_aware_fuse_y_v3(img_sr_fetcher, img_gt_fetcher, opts, beta, beta2):
 
             # compute Locally Adaptive weight mask
             weight_mask_lq = comp_local_adptive_lq_masks(img_sr_lq_y, img_gt_lq_y, beta)
+            # TODO: improve the resize function for high-precision resizing
             weight_mask = resize_y_img_bicubic(weight_mask_lq, gt_h, gt_w)
             weight_masks[:, :, idx_sr] = weight_mask
 
@@ -282,6 +286,8 @@ def dst_aware_fuse_y_v3(img_sr_fetcher, img_gt_fetcher, opts, beta, beta2):
         ref_quality_weights = comp_ref_quality_weights(b_weight_masks, beta2)
 
         # combine each layer of masks and normalize
+        #   Note: np.finfo(np.longdouble).eps is added to prevent divide by zero error
+        weight_masks += np.finfo(np.longdouble).eps
         weight_masks /= np.sum(weight_masks, axis=-1)[..., None]
         final_weight_masks = np.copy(weight_masks)
         for idx_sr in range(num_img_sr):
