@@ -12,7 +12,7 @@ def main():
     gt_path = r'E:\CodeProjects\super_resolution\dataset\CUFED_SRNTT\CUFED5'
     num_input = 126
     num_ref = 5
-    fusion_subfolders = ['A_Y', 'B_Y', 'C_Y', 'E_Y', 'F_Y']
+    fusion_subfolders = ['A_Y', 'B_Y', 'C_Y', 'D_Y', 'E_Y']
     fusion_folder_name = 'CUFED5_fusion'
 
     # make root folder for fusion dataset

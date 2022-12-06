@@ -5,9 +5,12 @@ based on non-neural-network-based approaches
 import os
 import numpy as np
 import mmcv
-from util.utils import mkdirs, ImgFetcher, RefImgFetcher, resize_bgr_img_bicubic, resize_y_img_bicubic
+from util.utils import ImgFetcher, RefImgFetcher, RefImgFetcherWithRange, ImgFetcherWithRange, \
+    resize_bgr_img_bicubic, resize_y_img_bicubic, resize_img_cv2, get_time_str
+from util.eval_results import comp_psnr_ssim
 from mmsr.data.transforms import mod_crop
 import mmsr.utils.metrics as metrics
+import util.visualize as visual
 
 
 def get_original_input(img_gt_fetcher, opts):
@@ -197,7 +200,10 @@ def dst_aware_fuse_y_v2(img_in_fetcher, img_gt_fetcher, opts, beta):
 
 
 def comp_local_adptive_lq_masks(img_sr_lq_y, img_gt_lq_y, beta):
-    delta = np.square(img_sr_lq_y - img_gt_lq_y)
+    # we multiply it by 10 because the difference pixel intensity is too small
+    delta = np.square(10 * (img_sr_lq_y - img_gt_lq_y))
+    # TODO: for debuging only
+    # print(f"for delta, max:{delta.max()}, min:{delta.min()}")
     weight_mask_lq = np.exp(-beta * delta)
     return weight_mask_lq
 
@@ -235,13 +241,19 @@ def dst_aware_fuse_y_v3(img_sr_fetcher, img_gt_fetcher, opts, beta, beta2):
     scale = opts['scale']
     plot_result_sr = opts['plot_result_sr']
     plot_weight_mask = opts['plot_weight_mask']
+    num_input = 0
 
     # create folders to store images
     fused_path = os.path.join(fused_root_path, f'dst_aware_fuse_y_v3_{beta2}_{beta}')
-    if not os.path.exists(fused_path):
-        os.mkdir(fused_path)
+    if plot_result_sr or plot_weight_mask:
+        if not os.path.exists(fused_path):
+            os.mkdir(fused_path)
 
+    avg_psnr = 0.
+    avg_psnr_y = 0.
+    avg_ssim_y = 0.
     for ((idx, img_gt), (_, img_sr_list)) in zip(img_gt_fetcher, img_sr_fetcher):
+        num_input += 1
         # crop ground truth image to the same dimension as RefSR results
         img_gt = mod_crop(img_gt, scale=scale)
         gt_h, gt_w, _ = img_gt.shape
@@ -270,6 +282,7 @@ def dst_aware_fuse_y_v3(img_sr_fetcher, img_gt_fetcher, opts, beta, beta2):
         ref_quality_weights = comp_ref_quality_weights(b_weight_masks, beta2)
 
         # combine each layer of masks and normalize
+        weight_masks /= np.sum(weight_masks, axis=-1)[..., None]
         final_weight_masks = np.copy(weight_masks)
         for idx_sr in range(num_img_sr):
             final_weight_masks[:, :, idx_sr] *= ref_quality_weights[idx_sr]
@@ -286,7 +299,7 @@ def dst_aware_fuse_y_v3(img_sr_fetcher, img_gt_fetcher, opts, beta, beta2):
         dst_file_name = fused_filename_format.format(idx=idx)
         dst_file_path = os.path.join(fused_path, dst_file_name)
         if plot_weight_mask:
-            print(f"{comp_ref_quality_weights = }")
+            # print(f"{comp_ref_quality_weights = }")
             for idx_sr in range(num_img_sr):
                 mmcv.imwrite(weight_masks[:, :, idx_sr] * 255, dst_file_path[:-4] + f"_wm_{idx_sr + 1}.png")
                 mmcv.imwrite(b_weight_masks[:, :, idx_sr] * 255, dst_file_path[:-4] + f"_bwm_{idx_sr + 1}.png")
@@ -296,47 +309,14 @@ def dst_aware_fuse_y_v3(img_sr_fetcher, img_gt_fetcher, opts, beta, beta2):
         if plot_result_sr:
             mmcv.imwrite(img_fused * 255, dst_file_path)
 
+        # compute and save PSNR/SSIM
+        psnr, psnr_y, ssim_y = comp_psnr_ssim(img_gt, img_fused, scale)
+        avg_psnr += psnr
+        avg_psnr_y += psnr_y
+        avg_ssim_y += ssim_y
 
-def main():
-    num_input = 126
-    num_ref = 5
+    avg_psnr /= num_input
+    avg_psnr_y /= num_input
+    avg_ssim_y /= num_input
+    return avg_psnr, avg_psnr_y, avg_ssim_y
 
-    # create fetcher for RefSR images
-    img_sr_path = \
-        r'E:\CodeProjects\super_resolution\C2-Matching-Multi\results\C2_matching_gan_multi\visualization\CUFED5'
-    sr_name_format = '{idx:03d}_{ref_idx}_C2_matching_gan_multi.png'
-    img_sr_fetcher = RefImgFetcher(num_input=num_input, num_ref=num_ref, img_path=img_sr_path,
-                                   name_format_str=sr_name_format)
-    fused_filename_format = '{idx:03d}_fused.png'
-
-    # create fetcher for ground truth images
-    img_gt_path = r'E:\CodeProjects\super_resolution\dataset\CUFED_SRNTT\CUFED5'
-    gt_name_format = '{idx:03d}_0.png'
-    img_gt_fetcher = ImgFetcher(num_input=num_input, img_path=img_gt_path, name_format_str=gt_name_format)
-
-    # make root folder for fused images
-    fused_folder_name = 'CUFED5_fused'
-    fused_root_path = os.path.join(os.path.dirname(img_sr_path), fused_folder_name)
-    dir_paths = os.path.expanduser(fused_root_path)
-    os.makedirs(dir_paths, mode=0o777, exist_ok=True)
-
-    # fuse and save image
-    opts = {}
-    opts['fused_root_path'] = fused_root_path
-    opts['fused_filename_format'] = fused_filename_format
-    opts['scale'] = 4
-    opts['plot_weight_mask'] = False
-    opts['plot_result_sr']= False
-
-    # get_original_input(img_gt_fetcher, opts)
-
-    # naive_fuse(img_sr_fetcher, opts)
-
-    # for beta in [5, 10, 20, 30, 40, 80, 100, 140, 150, 160, 200]:
-    beta2 = 2
-    for beta in [40, 80, 140]:
-        dst_aware_fuse_y_v3(img_sr_fetcher, img_gt_fetcher, opts, beta=beta, beta2=beta2)
-
-
-if __name__ == '__main__':
-    main()
