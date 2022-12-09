@@ -76,7 +76,7 @@ We provide quick test code with the pretrained model.
 1. Run test code for models trained using **GAN loss**.
 
     ```bash
-    python mmsr/test.py -opt "options/test/test_C2_matching.yml"
+    python mmsr/test.py -opt "options/test/test_C2_matching_multi.yml"
     ```
 
    Check out the results in `./results`.
