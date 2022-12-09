@@ -1,6 +1,6 @@
 name: C2_matching_gan
-suffix: ~  # add suffix to saved images
-scale: 4
+suffix: ~  # add suffix to saved images # I guess '~' is equal to 'None'
+scale: 4 # downsampling scale of image
 model_type: RefRestorationModel
 set_CUDA_VISIBLE_DEVICES: ~
 crop_border: ~  # crop border when evaluation. If None(~), crop the scale pixels
@@ -8,16 +8,16 @@ gpu_ids: [1]
 
 datasets:
   test_1:  # the 1st test dataset
-    name: dataset_dame
+    name: CUFED5
     type: RefCUFEDDataset
-    dataroot_in: path-to-input-data
-    dataroot_ref: path-to-input-data
+    dataroot_in: E:\CodeProjects\super_resolution\dataset\CUFED_SRNTT\CUFED5
+    dataroot_ref: E:\CodeProjects\super_resolution\dataset\CUFED_SRNTT\CUFED5
     io_backend:
       type: disk
 
     bicubic_model: PIL
 
-    ann_file: path-to-ann-files
+    ann_file: ./datasets/CUFED5_pairs.txt
 
 val_func: BasicSRValidation
 save_img: true

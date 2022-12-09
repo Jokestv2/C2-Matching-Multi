@@ -72,7 +72,8 @@ class RefImgFetcher:
         if self.cur_idx < self.num_input:
             fcli = FileClient()
             img_in_list = []
-            for ref_idx in range(0, 0 + self.num_ref): # TODO: temporalrily modified for DZSR
+            # TODO: currently DSZR needs the idx to start from 1 while C2-matching needs it to start from 0
+            for ref_idx in range(1, 1 + self.num_ref):
                 src_file_name = self.name_format_str.format(idx=self.cur_idx, ref_idx=ref_idx)
                 src_file_path = os.path.join(self.img_path, src_file_name)
                 img_bytes = fcli.get(src_file_path, 'in')

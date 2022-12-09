@@ -70,7 +70,7 @@ def do_experiements_dzsr():
     plot_images = True
     save_metrics = False
     time_str = evaluate_dst_aware_fuse_y_v3_CUFED5(saved_folder, beta2_list, beta_list, plot_images, save_metrics)
-    visual.visual_beta_metrics(saved_folder, time_str)
+    # visual.visual_beta_metrics(saved_folder, time_str)
 
 
 if __name__ == '__main__':

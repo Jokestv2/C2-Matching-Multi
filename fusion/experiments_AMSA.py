@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import mmcv
-from fusion.non_nn_fuse import dst_aware_fuse_y_v3
+from fusion.non_nn_fuse import dst_aware_fuse_y_v3_AMSA
 from util.utils import ImgFetcher, RefImgFetcher, RefImgFetcherWithRange, ImgFetcherWithRange, \
     resize_bgr_img_bicubic, resize_y_img_bicubic, resize_img_cv2, get_time_str
 from util.eval_results import comp_psnr_ssim
@@ -9,18 +9,18 @@ from mmsr.data.transforms import mod_crop
 import mmsr.utils.metrics as metrics
 import util.visualize as visual
 
-# default_img_sr_path = \
-#     r'E:\CodeProjects\super_resolution\C2-Matching-Multi\results\amsa_gan_multi\visualization\CUFED5'
-# default_sr_name_format = '{idx:03d}_{ref_idx}_AMSA_gan.png'
-
 default_img_sr_path = \
-    r'E:\CodeProjects\super_resolution\C2-Matching-Multi\results\C2_matching_gan_multi\visualization\CUFED5'
-default_sr_name_format = '{idx:03d}_{ref_idx}_C2_matching_gan_multi.png'
+    r'E:\CodeProjects\super_resolution\C2-Matching-Multi\results\amsa_gan_multi\visualization\CUFED5'
+default_sr_name_format = '{idx:03d}_{ref_idx}_AMSA_gan.png'
+
+# default_img_sr_path = \
+#     r'E:\CodeProjects\super_resolution\C2-Matching-Multi\results\C2_matching_gan_multi\visualization\CUFED5'
+# default_sr_name_format = '{idx:03d}_{ref_idx}_C2_matching_gan_multi.png'
 
 
 def evaluate_dst_aware_fuse_y_v3_CUFED5(saved_folder, beta2_list, beta_list, plot_images=False, save_metrics=False):
     num_input = 126
-    num_ref = 5
+    num_ref = 3
 
     # create fetcher for RefSR images
     img_sr_path = default_img_sr_path
@@ -53,7 +53,7 @@ def evaluate_dst_aware_fuse_y_v3_CUFED5(saved_folder, beta2_list, beta_list, plo
     for (i, beta2) in enumerate(beta2_list):
         for (j, beta) in enumerate(beta_list):
             avg_psnr, avg_psnr_y, avg_ssim_y \
-                = dst_aware_fuse_y_v3(img_sr_fetcher, img_gt_fetcher, opts, beta=beta, beta2=beta2)
+                = dst_aware_fuse_y_v3_AMSA(img_sr_fetcher, img_gt_fetcher, opts, beta=beta, beta2=beta2)
             print(f"For beta2: {beta2}, beta: {beta}\n")
             print(f" PSNR: {avg_psnr}\n PSNR_Y: {avg_psnr_y}\n SSIM_Y: {avg_ssim_y}\n")
             avg_psnr_mat[i, j] = avg_psnr
@@ -105,7 +105,7 @@ def evaluate_dst_aware_fuse_y_v3_CUFED5_num_sr(saved_folder, beta2_list, beta_li
     for (i, beta2) in enumerate(beta2_list):
         for (j, beta) in enumerate(beta_list):
             avg_psnr, avg_psnr_y, avg_ssim_y \
-                = dst_aware_fuse_y_v3(img_sr_fetcher, img_gt_fetcher, opts, beta=beta, beta2=beta2)
+                = dst_aware_fuse_y_v3_AMSA(img_sr_fetcher, img_gt_fetcher, opts, beta=beta, beta2=beta2)
             print(f"For beta2: {beta2}, beta: {beta}\n")
             print(f" PSNR: {avg_psnr}\n PSNR_Y: {avg_psnr_y}\n SSIM_Y: {avg_ssim_y}\n")
             avg_psnr_mat[i, j] = avg_psnr
@@ -133,7 +133,6 @@ def evaluate_dst_aware_fuse_y_v3_CUFED5_single_img(saved_folder, img_idx, beta2_
     # create fetcher for RefSR images
     img_sr_path = default_img_sr_path
     sr_name_format = default_sr_name_format
-    sr_name_format = '{idx:03d}_{ref_idx}_C2_matching_gan_multi.png'
     img_sr_fetcher = RefImgFetcherWithRange(lower_bound=lower_bound, upper_bound=upper_bound, num_ref=num_ref,
                                             img_path=img_sr_path, name_format_str=sr_name_format)
 
@@ -163,7 +162,7 @@ def evaluate_dst_aware_fuse_y_v3_CUFED5_single_img(saved_folder, img_idx, beta2_
     for (i, beta2) in enumerate(beta2_list):
         for (j, beta) in enumerate(beta_list):
             avg_psnr, avg_psnr_y, avg_ssim_y \
-                = dst_aware_fuse_y_v3(img_sr_fetcher, img_gt_fetcher, opts, beta=beta, beta2=beta2)
+                = dst_aware_fuse_y_v3_AMSA(img_sr_fetcher, img_gt_fetcher, opts, beta=beta, beta2=beta2)
             print(f"For beta2: {beta2}, beta: {beta}\n")
             print(f" PSNR: {avg_psnr}\n PSNR_Y: {avg_psnr_y}\n SSIM_Y: {avg_ssim_y}\n")
             avg_psnr_mat[i, j] = avg_psnr
@@ -185,10 +184,10 @@ def evaluate_dst_aware_fuse_y_v3_CUFED5_single_img(saved_folder, img_idx, beta2_
 def do_experiements_quantitative_beta():
     saved_folder = 'fused_experiments_quantitative'
 
-    beta2_list = [0]
-    beta_list = np.arange(0, 840, 30)
+    # beta2_list = [0]
+    beta_list = np.arange(0, 930, 30)
 
-    # beta2_list = np.arange(0, 8.2, 0.2)
+    beta2_list = np.arange(0, 8.2, 0.2)
     # beta_list = [0]
 
     plot_images = False
@@ -216,28 +215,30 @@ def do_experiements_quantitative_num_sr():
 
 def do_experiments_qualitative():
     saved_folder = 'fused_experiments_qualitative'
-    img_idx = 2
+    # img_idx = 39
+    # img_idx = 10
+    # img_idx = 80
     # img_idx = 93
     # img_idx = 65
-    # img_idx = 91
+    img_idx = 91
     # # inital search
 
     # beta2_list = np.arange(0, 30, 3)
-    # beta_list = np.arange(0, 500, 30)
+    # beta_list = np.arange(0, 200, 30)
 
     # # precise search 1
-    # beta2_list = np.arange(0, 3, 0.5)
-    # beta_list = np.arange(0, 60, 3)
+    # beta2_list = np.arange(0, 6, 0.3)
+    # beta_list = np.arange(0, 30, 3)
 
     # precise search 2
     # beta2_list = np.arange(0, 6, 1)
-    # beta_list = np.arange(0, 30, 10)
+    # beta_list = np.arange(330, 390, 10)
 
     # beta2_list = np.arange(1, 4, 0.5)
     # beta_list = np.arange(0, 10, 1)
 
-    beta2_list = [8]
-    beta_list = [180]
+    beta2_list = [3.6]
+    beta_list = [0]
 
     plot_images = True
     # plot_images = False
@@ -247,6 +248,8 @@ def do_experiments_qualitative():
                                                               plot_images, save_metrics, num_ref)
     # visual.visual_beta_metrics(saved_folder, time_str)
 
+
 if __name__ == '__main__':
-    # do_experiements_quantitative_beta()
-    do_experiments_qualitative()
+    do_experiements_quantitative_beta()
+    # do_experiements_quantitative_num_sr()
+    # do_experiments_qualitative()
