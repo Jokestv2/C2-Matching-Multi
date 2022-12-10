@@ -29,8 +29,8 @@ This project allows you to:
 1. Create Conda Environment
 
    ```bash
-   conda create --name c2_matching python=3.9.7
-   conda activate c2_matching
+   conda create --prefix ./c2_matching python=3.9.7
+   conda activate ./c2_matching
    ```
 
 1. Install Dependencies
