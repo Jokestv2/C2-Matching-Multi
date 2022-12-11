@@ -98,6 +98,39 @@ class RefImgFetcherWithRange(RefImgFetcher):
         return self
 
 
+class RefImgFetcherByIndexList:
+    """
+    Iterable object fetching a group of images, using different Ref images, from the RefSR outputs
+    """
+    def __init__(self, index_list, num_ref, img_path, name_format_str):
+        self.index_list = index_list
+        self.index_list_len = len(index_list)
+        self.num_ref = num_ref
+        self.img_path = img_path
+        self.name_format_str = name_format_str
+
+    def __iter__(self):
+        self.cur_i = 0
+        return self
+
+    def __next__(self):
+        if self.cur_i < self.index_list_len:
+            idx = self.index_list[self.cur_i]
+            fcli = FileClient()
+            img_in_list = []
+            for ref_idx in range(1, 1 + self.num_ref):
+                src_file_name = self.name_format_str.format(idx=idx, ref_idx=ref_idx)
+                src_file_path = os.path.join(self.img_path, src_file_name)
+                img_bytes = fcli.get(src_file_path, 'in')
+                img_in = mmcv.imfrombytes(img_bytes, channel_order='bgr').astype(np.float32) / 255.
+                img_in_list.append(img_in)
+            self.cur_i += 1
+            return idx, img_in_list
+        else:
+            raise StopIteration
+
+
+
 class ImgFetcher:
     """
     Iterable object fetching images
@@ -135,3 +168,31 @@ class ImgFetcherWithRange(ImgFetcher):
     def __iter__(self):
         self.cur_idx = self.lr_b
         return self
+
+
+class ImgFetcherByIndexList:
+    """
+    Iterable object fetching images
+    """
+    def __init__(self, index_list, img_path, name_format_str):
+        self.index_list = index_list
+        self.index_list_len = len(index_list)
+        self.img_path = img_path
+        self.name_format_str = name_format_str
+
+    def __iter__(self):
+        self.cur_i = 0
+        return self
+
+    def __next__(self):
+        if self.cur_i < self.index_list_len:
+            idx = self.index_list[self.cur_i]
+            fcli = FileClient()
+            src_file_name = self.name_format_str.format(idx=idx)
+            src_file_path = os.path.join(self.img_path, src_file_name)
+            img_bytes = fcli.get(src_file_path, 'in')
+            img_in = mmcv.imfrombytes(img_bytes, channel_order='bgr').astype(np.float32) / 255.
+            self.cur_i += 1
+            return idx, img_in
+        else:
+            raise StopIteration

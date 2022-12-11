@@ -20,9 +20,10 @@ ssim_line_fmt = {
     'AMSA': '--g'
 }
 
-# datasets = ['C2-Matching', 'AMSA']
-# datasets = ['C2-Matching']
-datasets = ['AMSA']
+# model_used = ['C2-Matching', 'AMSA']
+model_used = ['C2-Matching']
+# model_used = ['AMSA']
+
 
 def main():
     # saved_folder = 'fused_experiments_qualitative'
@@ -42,10 +43,9 @@ def main():
     # x_label = r'$\beta_g$'
     # visual_beta2_metrics('', x_label, time_str)
 
-
     saved_folder = 'fused_experiments_quantitative'
-    time_str = '20221208_224945'
-    root_path = amsa_root_path
+    time_str = '20221210_221023'
+    root_path = c2_root_path
     visual_beta_and_beta2_metrics(root_path, saved_folder, time_str)
 
     # num_sr
@@ -64,26 +64,26 @@ def visual_beta_metrics(saved_folder, x_label, time_str_dict='20221206_012156'):
         saved_folder = 'fused_experiments_quantitative'
 
     root_path = {}
-    for ds in datasets:
+    for ds in model_used:
         root_path[ds] = os.path.join(root_paths[ds], saved_folder)
 
     avg_psnr_mat = {}
     avg_psnr_y_mat = {}
     avg_ssim_y_mat = {}
-    for ds in datasets:
+    for ds in model_used:
         time_str = time_str_dict[ds]
         avg_psnr_mat[ds] = np.load(os.path.join(root_path[ds], f'{time_str}_avg_psnr_mat.npy'))
         avg_psnr_y_mat[ds] = np.load(os.path.join(root_path[ds], f'{time_str}_avg_psnr_y_mat.npy'))
         avg_ssim_y_mat[ds] = np.load(os.path.join(root_path[ds], f'{time_str}_avg_ssim_y_mat.npy'))
-    beta2_list = np.load(os.path.join(root_path[datasets[0]], f'{time_str_dict[datasets[0]]}_beta2_list.npy'))
-    beta_list = np.load(os.path.join(root_path[datasets[0]], f'{time_str_dict[datasets[0]]}_beta_list.npy'))
+    beta2_list = np.load(os.path.join(root_path[model_used[0]], f'{time_str_dict[model_used[0]]}_beta2_list.npy'))
+    beta_list = np.load(os.path.join(root_path[model_used[0]], f'{time_str_dict[model_used[0]]}_beta_list.npy'))
 
     # print(f"Shape of avg_psnr_y_mat is: {np.shape(avg_psnr_y_mat)}")
     # print(f"Shape of avg_ssim_y_mat is: {np.shape(avg_ssim_y_mat)}")
     # print(f"Shape of beta2_list is: {np.shape(beta2_list)}")
     # print(f"Shape of beta_list is: {np.shape(beta_list)}")
 
-    saved_path = os.path.join(root_path[datasets[0]], f'{time_str_dict[datasets[0]]}_beta_metrics.png')
+    saved_path = os.path.join(root_path[model_used[0]], f'{time_str_dict[model_used[0]]}_beta_metrics.png')
     plot_psnr_and_ssim(beta_list, x_label, avg_psnr_y_mat, avg_ssim_y_mat, saved_path)
 
 
@@ -92,32 +92,33 @@ def visual_beta2_metrics(saved_folder, x_label, time_str_dict='20221206_004426')
         saved_folder = 'fused_experiments_quantitative'
 
     root_path = {}
-    for ds in datasets:
+    for ds in model_used:
         root_path[ds] = os.path.join(root_paths[ds], saved_folder)
 
     avg_psnr_mat = {}
     avg_psnr_y_mat = {}
     avg_ssim_y_mat = {}
-    for ds in datasets:
+    for ds in model_used:
         time_str = time_str_dict[ds]
         avg_psnr_mat[ds] = np.load(os.path.join(root_path[ds], f'{time_str}_avg_psnr_mat.npy'))
         avg_psnr_y_mat[ds] = np.load(os.path.join(root_path[ds], f'{time_str}_avg_psnr_y_mat.npy'))
         avg_ssim_y_mat[ds] = np.load(os.path.join(root_path[ds], f'{time_str}_avg_ssim_y_mat.npy'))
         avg_psnr_y_mat[ds] = avg_psnr_y_mat[ds].transpose()
         avg_ssim_y_mat[ds] = avg_ssim_y_mat[ds].transpose()
-    beta2_list = np.load(os.path.join(root_path[datasets[0]], f'{time_str_dict[datasets[0]]}_beta2_list.npy'))
-    beta_list = np.load(os.path.join(root_path[datasets[0]], f'{time_str_dict[datasets[0]]}_beta_list.npy'))
+    beta2_list = np.load(os.path.join(root_path[model_used[0]], f'{time_str_dict[model_used[0]]}_beta2_list.npy'))
+    beta_list = np.load(os.path.join(root_path[model_used[0]], f'{time_str_dict[model_used[0]]}_beta_list.npy'))
 
 
 
-    saved_path = os.path.join(root_path[datasets[0]], f'{time_str_dict[datasets[0]]}_beta2_metrics.png')
+    saved_path = os.path.join(root_path[model_used[0]], f'{time_str_dict[model_used[0]]}_beta2_metrics.png')
     plot_psnr_and_ssim(beta2_list, x_label, avg_psnr_y_mat, avg_ssim_y_mat, saved_path)
+
 
 def plot_psnr_and_ssim(x_values, x_label, psnr_values, ssim_values, img_save_path):
     fig, ax1 = plt.subplots()
     ax2 = ax1.twinx()
 
-    for ds in datasets:
+    for ds in model_used:
         ln1 = ax1.plot(x_values, psnr_values[ds].squeeze(), psnr_y_line_fmt[ds],
                        label=f'PSNR_Y - {ds}')
         ln2 = ax2.plot(x_values, ssim_values[ds].squeeze(), ssim_line_fmt[ds],
@@ -177,17 +178,18 @@ def visual_beta_and_beta2_metrics(root_path, saved_folder, time_str='20221206_00
     plt.savefig(os.path.join(root_path, f'{time_str}_avg_ssim_y_mat_beta_beta2.png'), dpi=300, bbox_inches='tight')
     plt.show()
 
+
 def visual_num_sr_metrics(saved_folder, time_str_list):
     if len(saved_folder) < 1:
         saved_folder = 'fused_experiments_quantitative_num_sr'
     root_path = {}
-    for ds in datasets:
+    for ds in model_used:
         root_path[ds] = os.path.join(root_paths[ds], saved_folder)
 
     RefNum = [1,2,3,4,5]
     psnr_y_list = {}
     ssim_y_list = {}
-    for ds in datasets:
+    for ds in model_used:
         psnr_y_list[ds] = []
         ssim_y_list[ds] = []
         for t_str in time_str_list[ds]:
@@ -200,7 +202,7 @@ def visual_num_sr_metrics(saved_folder, time_str_list):
     fig, ax1 = plt.subplots()
     ax2 = ax1.twinx()
 
-    for ds in datasets:
+    for ds in model_used:
         hline_y = [psnr_y_list[ds][0] for x in x_values]
         ln1 = ax1.plot(x_values, psnr_y_list[ds], 'o' + psnr_y_line_fmt[ds],
                        label=f'PSNR_Y - {ds}')
@@ -224,11 +226,9 @@ def visual_num_sr_metrics(saved_folder, time_str_list):
 
     plt.tight_layout()
 
-    saved_path = os.path.join(root_path[datasets[0]], f'{time_str_list[ds][0]}_{time_str_list[ds][-1]}_num_sr.png')
+    saved_path = os.path.join(root_path[model_used[0]], f'{time_str_list[ds][0]}_{time_str_list[ds][-1]}_num_sr.png')
     plt.savefig(saved_path, dpi=300, bbox_inches='tight')
     plt.show()
-
-
 
 
 if __name__ == '__main__':
